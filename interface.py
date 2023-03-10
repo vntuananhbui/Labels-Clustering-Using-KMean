@@ -148,6 +148,8 @@ while running:
             #Run button
             if  850 < mouse_x < 1000 and 150 < mouse_y < 200:
                 labels = []
+
+                #assign points to closet clusters
                 for p in points:
                     distances_to_cluster = []
                     for c in clusters:
@@ -156,6 +158,23 @@ while running:
                     min_distance = min(distances_to_cluster)
                     label = distances_to_cluster.index(min_distance)
                     labels.append(label)
+
+                #update clusters
+                for i in range(K):
+                    sum_x = 0
+                    sum_y = 0
+                    count = 0
+                    for j in range(len(points)):
+                        if labels[j] == i:
+                            sum_x += points[j][0]
+                            sum_y += points[j][1]
+                            count += 1
+                    if count !=0:
+                        
+                        new_cluster_x = sum_x/count
+                        new_cluster_y = sum_y/count
+                        clusters[i] = [new_cluster_x,new_cluster_y]
+                    pass
                 print("run pressed")
 
 
