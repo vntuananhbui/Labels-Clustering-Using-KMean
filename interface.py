@@ -4,6 +4,7 @@ from this import d
 import pygame
 from random import randint #get random integer number to #random
 import math
+from sklearn.cluster import KMeans
 
 
 #define text
@@ -101,15 +102,25 @@ while running:
     pygame.draw.rect(screen, BLACK, (850,550,150,50))
     screen.blit(text_reset, (850,550))
 
-    #error text
-    text_error = font.render("Error = " + str(error), True, BLACK)
-    screen.blit(text_error, (850,350))
+    # #error text
+    # text_error = font.render("Error = " + str(error), True, BLACK)
+    # screen.blit(text_error, (850,350))
 
     #draw mouse position when mouse is in panel
     if 50 < mouse_x < 750 and 50 < mouse_y < 550:
         text_mouse = font_small.render("(" + str(mouse_x - 50) + "," + str(mouse_y - 50) + ")", True , BLACK)
         screen.blit(text_mouse, (mouse_x + 10,mouse_y))
-        
+
+    
+    #Calculate and draw error
+    error = 0
+    if clusters != [] and labels != []:
+        for i in range(len(points)):
+            error += distance(points[i], clusters[labels[i]])
+    text_error = font.render("Error = " + str(int(error)), True, BLACK)
+    screen.blit(text_error,(850,350))
+
+    
     # End draw Interface
 
     
@@ -125,6 +136,7 @@ while running:
             #print('click') #print 'click' when user click by mouse
             #Create point on panel
             if 50 < mouse_x < 750 and 50 < mouse_y < 550:
+                labels = []
                 point = [mouse_x -50 , mouse_y -50] #start with (0,0)
                 points.append(point)
                 #print("in panel")
@@ -149,12 +161,15 @@ while running:
             if  850 < mouse_x < 1000 and 150 < mouse_y < 200:
                 labels = []
 
+                if clusters == []: #fix error when click run before random
+                    continue
                 #assign points to closet clusters
                 for p in points:
                     distances_to_cluster = []
                     for c in clusters:
                         dis = distance(p,c)
                         distances_to_cluster.append(dis)
+                    
                     min_distance = min(distances_to_cluster)
                     label = distances_to_cluster.index(min_distance)
                     labels.append(label)
@@ -180,6 +195,7 @@ while running:
 
             #Random button
             if 850 < mouse_x < 1000 and 250 < mouse_y < 300:
+                labels = [] #reset all cluster to white when click
                 clusters = []
                 for i in range(K):
                     random_point = [randint(0,700), randint(0,500)] #height 700px,width 500px
@@ -188,17 +204,29 @@ while running:
 
             #Algorithm button
             if 850 < mouse_x < 1000 and 450 < mouse_y < 500:
+                try:
+                    kmeans = KMeans(n_clusters=K).fit(points)
+                    labels = kmeans.predict(points)
+                    clusters = kmeans.cluster_centers_
+                except:
+                    print('You need to put your points')
+
                 print("algorithm pressed")
 
             #Reset button
             if 850 < mouse_x < 1000 and 550 < mouse_y < 600:
+                points = []
+                labels = []
+                K = 0 
+                error = 0
+                clusters = []
                 print("reset pressed")
             
             #error text
 
     #draw Clusters
     for i in range(len(clusters)):
-        pygame.draw.circle(screen,COLOR[i], (clusters[i][0] +50,clusters[i][1] + 50), 10) #+50 make sure that the cluster fit in the panel not in all program
+        pygame.draw.circle(screen,COLOR[i], (int(clusters[i][0]) + 50, int(clusters[i][1]) + 50), 10) #+50 make sure that the cluster fit in the panel not in all program
     #Draw point around by circle
     for i in range(len(points)):
         pygame.draw.circle(screen, BLACK, (points[i][0] + 50, points[i][1] + 50), 6) #screen,color,centre of circle,radius of circle #+50 because draw in all screen not just in the panel
